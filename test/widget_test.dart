@@ -44,11 +44,53 @@ void main() {
     expect(find.text('Enter your password.'), findsOneWidget);
   });
 
+  testWidgets('login rejects incorrect credentials with feedback', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const TikTokTokApp());
+    await tester.enterText(
+      find.byKey(const ValueKey('username-field')),
+      'wrong-user',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('password-field')),
+      'wrongpass',
+    );
+    await tester.tap(find.text('LOGIN'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Incorrect username or password.'), findsOneWidget);
+    expect(find.text('Welcome back'), findsOneWidget);
+  });
+
+  testWidgets('profile can log out and return to login', (tester) async {
+    await tester.pumpWidget(const TikTokTokApp());
+    await tester.enterText(
+      find.byKey(const ValueKey('username-field')),
+      'michael',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('password-field')),
+      'password',
+    );
+    await tester.tap(find.text('LOGIN'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Log out'));
+    await tester.pumpAndSettle();
+    expect(find.text('Log out of TIKTOKTOK?'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Log out'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.text('Charles Mike L. Quimado'), findsNothing);
+  });
+
   testWidgets('login shows loading and disables the button', (tester) async {
     await tester.pumpWidget(const TikTokTokApp());
     await tester.enterText(
       find.byKey(const ValueKey('username-field')),
-      'charles',
+      'michael',
     );
     await tester.enterText(
       find.byKey(const ValueKey('password-field')),
@@ -204,7 +246,7 @@ void main() {
     await tester.pumpWidget(const TikTokTokApp());
     await tester.enterText(
       find.byKey(const ValueKey('username-field')),
-      'charles',
+      'michael',
     );
     await tester.enterText(
       find.byKey(const ValueKey('password-field')),
@@ -253,7 +295,7 @@ void main() {
       await tester.pumpWidget(const TikTokTokApp());
       await tester.enterText(
         find.byKey(const ValueKey('username-field')),
-        'charles',
+        'michael',
       );
       await tester.enterText(
         find.byKey(const ValueKey('password-field')),

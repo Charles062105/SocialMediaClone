@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/routes.dart';
-import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_sizes.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/feedback.dart';
 import '../../../core/utils/validators.dart';
+import '../../../services/demo_auth_service.dart';
 
 /// Login form with inline validation and a loading state.
 class LoginForm extends StatefulWidget {
@@ -19,7 +20,9 @@ class _LoginFormState extends State<LoginForm> {
   final _formKey = GlobalKey<FormState>();
   final _username = TextEditingController();
   final _password = TextEditingController();
+  final _authService = DemoAuthService();
   bool _isLoading = false;
+  String? _authError;
 
   @override
   void dispose() {
@@ -30,10 +33,20 @@ class _LoginFormState extends State<LoginForm> {
 
   Future<void> _submit() async {
     if (_isLoading || !(_formKey.currentState?.validate() ?? false)) return;
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _authError = null;
+    });
     try {
-      await Future<void>.delayed(const Duration(milliseconds: 250));
+      final authenticated = await _authService.authenticate(
+        username: _username.text,
+        password: _password.text,
+      );
       if (!mounted) return;
+      if (!authenticated) {
+        setState(() => _authError = AppStrings.invalidCredentials);
+        return;
+      }
       Navigator.of(context).pushReplacementNamed(AppRoutes.profile);
     } catch (error, stackTrace) {
       debugPrint('TIKTOKTOK login failed: $error\n$stackTrace');
@@ -68,6 +81,9 @@ class _LoginFormState extends State<LoginForm> {
               controller: _username,
               textInputAction: TextInputAction.next,
               validator: AppValidators.username,
+              onChanged: (_) {
+                if (_authError != null) setState(() => _authError = null);
+              },
               decoration: const InputDecoration(
                 labelText: AppStrings.username,
                 prefixIcon: Icon(Icons.person_outline_rounded),
@@ -80,12 +96,24 @@ class _LoginFormState extends State<LoginForm> {
               obscureText: true,
               textInputAction: TextInputAction.done,
               onFieldSubmitted: (_) => _submit(),
+              onChanged: (_) {
+                if (_authError != null) setState(() => _authError = null);
+              },
               validator: AppValidators.password,
               decoration: const InputDecoration(
                 labelText: AppStrings.password,
                 prefixIcon: Icon(Icons.lock_outline_rounded),
               ),
             ),
+            if (_authError != null) ...[
+              const SizedBox(height: AppSizes.smallGap),
+              Text(
+                _authError!,
+                key: const ValueKey('login-auth-error'),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                textAlign: TextAlign.center,
+              ),
+            ],
             const SizedBox(height: AppSizes.sectionGap),
             FilledButton(
               onPressed: _isLoading ? null : _submit,
@@ -97,6 +125,12 @@ class _LoginFormState extends State<LoginForm> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Text(AppStrings.login),
+            ),
+            const SizedBox(height: AppSizes.cardGap),
+            Text(
+              AppStrings.demoCredentials,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
         ),

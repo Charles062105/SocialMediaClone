@@ -7,9 +7,16 @@ abstract final class AppStrings {
   static const username = 'Username';
   static const password = 'Password';
   static const login = 'LOGIN';
+  static const demoUsername = 'mike';
+  static const demoPassword = 'password';
+  static const demoCredentials = 'Demo account: $demoUsername / $demoPassword';
+  static const invalidCredentials = 'Incorrect username or password.';
   static const requiredUsername = 'Enter your username.';
   static const requiredPassword = 'Enter your password.';
   static const shortPassword = 'Password must be at least 6 characters.';
+  static const logout = 'Log out';
+  static const logoutTitle = 'Log out of TIKTOKTOK?';
+  static const logoutConfirmation = 'You will return to the login screen.';
   static const profile = 'Profile';
   static const backToProfile = 'Back to profile';
   static const friends = 'Friends';

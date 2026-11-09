@@ -25,6 +25,7 @@ class ProfileScreen extends StatelessWidget {
         AppStrings.appName,
         style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.2),
       ),
+      actions: const [_LogoutButton()],
     ),
     body: CustomScrollView(
       key: const PageStorageKey<String>('profile-scroll'),
@@ -99,5 +100,39 @@ class _EmptyState extends StatelessWidget {
         textAlign: TextAlign.center,
       ),
     ),
+  );
+}
+
+class _LogoutButton extends StatelessWidget {
+  const _LogoutButton();
+
+  Future<void> _logout(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(AppStrings.logoutTitle),
+        content: const Text(AppStrings.logoutConfirmation),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text(AppStrings.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(AppStrings.logout),
+          ),
+        ],
+      ),
+    );
+    if (!context.mounted || confirmed != true) return;
+    Navigator.of(context)
+        .pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+  }
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: AppStrings.logout,
+    onPressed: () => _logout(context),
+    icon: const Icon(Icons.logout_rounded),
   );
 }
