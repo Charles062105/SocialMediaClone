@@ -1,0 +1,32 @@
+name: social_media
+description: TIKTOKTOK social profile and comments demo.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  shared_preferences: ^2.5.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/friend_ethan.png
+    - assets/friend_jeo.png
+    - assets/friend_johnny.png
+    - assets/friend_manny.png
+    - assets/friend_mia.png
+    - assets/friend_peter.png
+    - assets/post_fresh.jpg
+    - assets/post_lake.jpg
+    - assets/post_sunrise.jpg
+    - assets/profile_charles.png
