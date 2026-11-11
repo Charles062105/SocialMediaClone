@@ -105,10 +105,55 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(replyButton);
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField), 'Nice photo');
+    await tester.enterText(find.byType(TextField).last, 'Nice photo');
     await tester.tap(find.widgetWithText(TextButton, 'Reply').last);
     await tester.pumpAndSettle();
 
     expect(find.text('You: Nice photo'), findsOneWidget);
+  });
+
+  testWidgets('a comment can be added from the post screen', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: LoginForm()));
+
+    await openFirstPost(tester);
+    await tester.enterText(find.byType(TextFormField).last, 'A great view!');
+    await tester.tap(find.byTooltip('Send comment'));
+    await tester.pumpAndSettle();
+
+    final addedComment = find.text('A great view!');
+    await tester.scrollUntilVisible(
+      addedComment,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(addedComment, findsOneWidget);
+    expect(find.text('Charles Mike L. Quimado'), findsWidgets);
+
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    final postCaption = find.text('Taking in a peaceful sunrise.');
+    await tester.scrollUntilVisible(
+      postCaption,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(postCaption);
+    await tester.pumpAndSettle();
+
+    final commentCount = find.text('All Comments (3)');
+    await tester.scrollUntilVisible(
+      commentCount,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(commentCount, findsOneWidget);
+    final savedComment = find.text('A great view!');
+    await tester.scrollUntilVisible(
+      savedComment,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(savedComment, findsOneWidget);
   });
 }

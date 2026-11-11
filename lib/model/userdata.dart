@@ -4,8 +4,25 @@ import 'package:social_media/model/usercomment.dart';
 import 'package:social_media/model/userpost.dart';
 
 class Userdata {
+  // COMMENT LIST
+  List<UserComment> commentlist = [
+    UserComment(
+      commenterImg: "assets/friend_ethan.png",
+      commenterName: "Ethan",
+      commentTime: "1 hour ago",
+      commenterContent: "This is a sample comment.",
+    ),
+
+    UserComment(
+      commenterImg: "assets/friend_mia.png",
+      commenterName: "Olivia",
+      commentTime: "2 hours ago",
+      commenterContent: "This is another sample comment.",
+    ),
+  ];
+
   // USER POSTS
-  List<UserPost> userlist = [
+  late List<UserPost> userlist = [
     UserPost(
       userImg: "assets/profile_charles.png",
       username: "Charles Mike L. Quimado",
@@ -15,6 +32,7 @@ class Userdata {
       numcommnets: "10",
       numshare: "5",
       isLiked: true,
+      comments: commentlist,
     ),
 
     UserPost(
@@ -53,23 +71,6 @@ class Userdata {
     Friend(name: "Peter Parker", imagePath: "assets/friend_peter.png"),
 
     Friend(name: "Ethan Mafia", imagePath: "assets/friend_ethan.png"),
-  ];
-
-  // COMMENT LIST
-  List<UserComment> commentlist = [
-    UserComment(
-      commenterImg: "assets/friend_ethan.png",
-      commenterName: "Ethan",
-      commentTime: "1 hour ago",
-      commenterContent: "This is a sample comment.",
-    ),
-
-    UserComment(
-      commenterImg: "assets/friend_mia.png",
-      commenterName: "Olivia",
-      commentTime: "2 hours ago",
-      commenterContent: "This is another sample comment.",
-    ),
   ];
 
   // USER ACCOUNT

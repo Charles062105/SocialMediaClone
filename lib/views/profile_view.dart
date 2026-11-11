@@ -151,7 +151,7 @@ class ProfileView extends StatelessWidget {
         ],
       );
 
-  Widget commenters() => Column(
+  Widget commenters(UserPost userPost) => Column(
     mainAxisAlignment: MainAxisAlignment.start,
     children: [
       const Divider(color: Colors.grey),
@@ -159,7 +159,10 @@ class ProfileView extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10),
         child: Row(
           children: [
-            Text('All Comments', style: boldTxtStyle),
+            Text(
+              'All Comments (${userPost.comments.length})',
+              style: boldTxtStyle,
+            ),
             const Icon(Icons.arrow_drop_down),
           ],
         ),
@@ -250,33 +253,88 @@ class ProfileView extends StatelessWidget {
     ),
   );
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        bottomOpacity: 0.0,
-        elevation: 0.0,
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(Icons.arrow_back, color: Colors.grey),
-        ),
-      ),
-
-      body: ListView(
-        padding: EdgeInsets.zero,
+  Widget commentInput(
+    GlobalKey<FormFieldState<String>> commentFieldKey,
+    VoidCallback addComment,
+  ) => SafeArea(
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
         children: [
-          userLine(userPost),
-          postImage(userPost),
-          buttons(),
-          commenters(),
-
-          ...userData.commentlist.map(
-            (userComment) => userCommentDetails(context, userComment),
+          Expanded(
+            child: TextFormField(
+              key: commentFieldKey,
+              textInputAction: TextInputAction.send,
+              decoration: const InputDecoration(
+                hintText: 'Write a comment...',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+              ),
+              onFieldSubmitted: (_) => addComment(),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Send comment',
+            onPressed: addComment,
+            icon: const Icon(Icons.send),
           ),
         ],
+      ),
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final commentFieldKey = GlobalKey<FormFieldState<String>>();
+
+    return StatefulBuilder(
+      builder: (context, setState) => Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          bottomOpacity: 0.0,
+          elevation: 0.0,
+          leading: IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: const Icon(Icons.arrow_back, color: Colors.grey),
+          ),
+        ),
+        bottomNavigationBar: commentInput(commentFieldKey, () {
+          final comment = commentFieldKey.currentState?.value?.trim() ?? '';
+          if (comment.isEmpty) return;
+
+          setState(() {
+            userPost.comments.add(
+              UserComment(
+                commenterImg: userData.myUserAccount.img,
+                commenterName: userData.myUserAccount.name,
+                commentTime: 'Just now',
+                commenterContent: comment,
+              ),
+            );
+            userPost.numcommnets = (int.parse(userPost.numcommnets) + 1)
+                .toString();
+            commentFieldKey.currentState?.reset();
+          });
+          FocusScope.of(context).unfocus();
+        }),
+        body: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            userLine(userPost),
+            postImage(userPost),
+            buttons(),
+            commenters(userPost),
+
+            ...userPost.comments.map(
+              (userComment) => userCommentDetails(context, userComment),
+            ),
+          ],
+        ),
       ),
     );
   }

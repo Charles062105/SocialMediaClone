@@ -1,12 +1,15 @@
+import 'package:social_media/model/usercomment.dart';
+
 class UserPost {
   final String userImg;
   final String username;
   final String time;
   final String postcontent;
   final String postimg;
-  final String numcommnets;
+  String numcommnets;
   final String numshare;
   bool isLiked;
+  final List<UserComment> comments;
 
   UserPost({
     required this.userImg,
@@ -17,5 +20,6 @@ class UserPost {
     required this.numcommnets,
     required this.numshare,
     this.isLiked = false,
-  });
+    List<UserComment>? comments,
+  }) : comments = comments ?? [];
 }
