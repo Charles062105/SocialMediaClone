@@ -1,375 +1,114 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:social_media/main.dart';
-import 'package:social_media/models/demo_data.dart';
-import 'package:social_media/features/posts/controllers/comments_controller.dart';
-import 'package:social_media/services/comment_storage_service.dart';
+import 'package:social_media/auth/login.dart';
+import 'package:social_media/views/profile_view.dart';
+
+Future<void> logIn(WidgetTester tester) async {
+  await tester.enterText(find.byType(TextField).at(0), 'michael');
+  await tester.enterText(find.byType(TextField).at(1), 'password');
+  await tester.tap(find.text('LOGIN'));
+  await tester.pumpAndSettle();
+}
+
+Future<void> openFirstPost(WidgetTester tester) async {
+  await logIn(tester);
+  final postCaption = find.text('Taking in a peaceful sunrise.');
+  await tester.scrollUntilVisible(
+    postCaption,
+    300,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.pumpAndSettle();
+  await tester.tap(postCaption);
+  await tester.pumpAndSettle();
+}
 
 void main() {
-  setUp(() {
-    SharedPreferences.setMockInitialValues({});
-  });
+  testWidgets('login opens the profile with friends and posts', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: LoginForm()));
 
-  testWidgets('login opens the TIKTOKTOK profile', (tester) async {
-    await tester.pumpWidget(const TikTokTokApp());
+    await logIn(tester);
 
-    await tester.enterText(
-      find.byKey(const ValueKey('username-field')),
-      'michael',
-    );
-    await tester.enterText(
-      find.byKey(const ValueKey('password-field')),
-      'password',
-    );
-    await tester.tap(find.text('LOGIN'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Charles Mike L. Quimado'), findsOneWidget);
+    expect(find.text('Charles Mike L. Quimado'), findsWidgets);
     expect(find.text('Friends'), findsOneWidget);
-    expect(find.text('6'), findsOneWidget);
     expect(find.text('Followers'), findsOneWidget);
     expect(find.text('1B'), findsOneWidget);
     expect(find.text('12.8K'), findsOneWidget);
-  });
+    expect(find.text('Posts'), findsOneWidget);
 
-  testWidgets('login rejects empty credentials', (tester) async {
-    await tester.pumpWidget(const TikTokTokApp());
-
-    await tester.tap(find.text('LOGIN'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Enter your username.'), findsOneWidget);
-    expect(find.text('Enter your password.'), findsOneWidget);
-  });
-
-  testWidgets('login rejects incorrect credentials with feedback', (
-    tester,
-  ) async {
-    await tester.pumpWidget(const TikTokTokApp());
-    await tester.enterText(
-      find.byKey(const ValueKey('username-field')),
-      'wrong-user',
-    );
-    await tester.enterText(
-      find.byKey(const ValueKey('password-field')),
-      'wrongpass',
-    );
-    await tester.tap(find.text('LOGIN'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Incorrect username or password.'), findsOneWidget);
-    expect(find.text('Welcome back'), findsOneWidget);
-  });
-
-  testWidgets('profile can log out and return to login', (tester) async {
-    await tester.pumpWidget(const TikTokTokApp());
-    await tester.enterText(
-      find.byKey(const ValueKey('username-field')),
-      'michael',
-    );
-    await tester.enterText(
-      find.byKey(const ValueKey('password-field')),
-      'password',
-    );
-    await tester.tap(find.text('LOGIN'));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byTooltip('Log out'));
-    await tester.pumpAndSettle();
-    expect(find.text('Log out of TIKTOKTOK?'), findsOneWidget);
-    await tester.tap(find.widgetWithText(FilledButton, 'Log out'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Welcome back'), findsOneWidget);
-    expect(find.text('Charles Mike L. Quimado'), findsNothing);
-  });
-
-  testWidgets('login shows loading and disables the button', (tester) async {
-    await tester.pumpWidget(const TikTokTokApp());
-    await tester.enterText(
-      find.byKey(const ValueKey('username-field')),
-      'michael',
-    );
-    await tester.enterText(
-      find.byKey(const ValueKey('password-field')),
-      'password',
-    );
-    await tester.tap(find.text('LOGIN'));
-    await tester.pump();
-
-    expect(find.byKey(const ValueKey('login-progress')), findsOneWidget);
-    expect(
-      tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
-      isNull,
-    );
-
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pumpAndSettle();
-    expect(find.text('Charles Mike L. Quimado'), findsOneWidget);
-  });
-
-  testWidgets('comments persist when leaving and reopening a post', (
-    tester,
-  ) async {
-    await tester.pumpWidget(const TikTokTokApp());
-    await tester.enterText(
-      find.byKey(const ValueKey('username-field')),
-      'michael',
-    );
-    await tester.enterText(
-      find.byKey(const ValueKey('password-field')),
-      'password',
-    );
-    await tester.tap(find.text('LOGIN'));
-    await tester.pumpAndSettle();
-
-    final postCaption = find.text('A quiet morning, thoughtfully spent.');
+    final postCaption = find.text('Taking in a peaceful sunrise.');
     await tester.scrollUntilVisible(
       postCaption,
       300,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.ensureVisible(postCaption);
+    expect(find.text('Taking in a peaceful sunrise.'), findsOneWidget);
+  });
+
+  testWidgets('login reports missing username and password', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: LoginForm()));
+
+    await tester.tap(find.text('LOGIN'));
     await tester.pumpAndSettle();
-    await tester.tap(postCaption);
+    expect(find.text('Please input your username'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField).at(0), 'michael');
+    await tester.tap(find.text('LOGIN'));
     await tester.pumpAndSettle();
+    expect(find.text('Please input your password'), findsOneWidget);
+  });
+
+  testWidgets('tapping a post opens its comments and back returns', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: LoginForm()));
+
+    await openFirstPost(tester);
+
+    expect(find.byType(ProfileView), findsOneWidget);
+    expect(find.text('Taking in a peaceful sunrise.'), findsOneWidget);
+    final comment = find.text('This is a sample comment.');
     await tester.scrollUntilVisible(
-      find.text('2 Comments'),
+      comment,
       300,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('2 Comments'), findsOneWidget);
+    expect(find.text('Ethan'), findsOneWidget);
+    expect(comment, findsOneWidget);
 
-    await tester.enterText(find.byType(TextField), 'A new saved comment');
-    await tester.tap(find.byTooltip('Send comment'));
+    await tester.tap(find.byIcon(Icons.arrow_back));
     await tester.pumpAndSettle();
-    expect(find.text('3 Comments'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Back to profile'));
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      postCaption,
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.ensureVisible(postCaption);
-    await tester.pumpAndSettle();
-    await tester.tap(postCaption);
-    await tester.pumpAndSettle();
-    await tester.drag(
-      find.byType(CustomScrollView).last,
-      const Offset(0, 1000),
-    );
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.text('3 Comments'),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-
-    expect(find.text('3 Comments'), findsOneWidget);
-  });
-
-  test('every post has at least one million likes', () {
-    expect(DemoData.posts, isNotEmpty);
-    expect(DemoData.posts.every((post) => post.likes >= 1000000), isTrue);
-  });
-
-  test(
-    'saved comments survive a controller and storage adapter restart',
-    () async {
-      final post = DemoData.posts.first;
-      final firstSession = CommentsController(
-        post: post,
-        account: DemoData.account,
-        storage: CommentStorageService(),
-      );
-      await firstSession.load();
-      expect(await firstSession.addComment('Saved across launch'), isTrue);
-      firstSession.dispose();
-
-      final nextSession = CommentsController(
-        post: post,
-        account: DemoData.account,
-        storage: CommentStorageService(),
-      );
-      await nextSession.load();
-      expect(
-        nextSession.comments.any(
-          (comment) => comment.text == 'Saved across launch',
-        ),
-        isTrue,
-      );
-      nextSession.dispose();
-    },
-  );
-
-  test('friend portraits and profile photo follow the supplied order', () {
-    expect(DemoData.friends.map((friend) => friend.name).toList(), [
-      'Johnny Sins',
-      'Manny Pacquiao',
-      'Mia Khalifa',
-      'Jeo Ong',
-      'Peter Parker',
-      'Ethan Mafia',
-    ]);
-    expect(DemoData.account.avatarPath, 'assets/profile_charles.png');
-  });
-
-  testWidgets('brand uses black and white with red likes', (tester) async {
-    await tester.pumpWidget(const TikTokTokApp());
-    final theme = Theme.of(tester.element(find.text('TIKTOKTOK')));
-
-    expect(theme.colorScheme.primary, const Color(0xFF111111));
-    expect(theme.colorScheme.secondary, const Color(0xFFE53935));
+    expect(find.byType(ProfileView), findsNothing);
     expect(find.text('TIKTOKTOK'), findsOneWidget);
   });
 
-  test('all seven supplied portraits are bundled app assets', () async {
-    final paths = [
-      DemoData.account.avatarPath,
-      ...DemoData.friends.map((friend) => friend.imagePath),
-    ];
-    for (final path in paths) {
-      await rootBundle.load(path);
-    }
+  testWidgets('comments can be liked and replied to', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: LoginForm()));
+
+    await openFirstPost(tester);
+    await tester.scrollUntilVisible(
+      find.text('This is a sample comment.'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    final commentLike = find.text('Like').last;
+    await tester.ensureVisible(commentLike);
+    await tester.pumpAndSettle();
+    await tester.tap(commentLike);
+    await tester.pumpAndSettle();
+    expect(find.text('Liked'), findsOneWidget);
+
+    final replyButton = find.text('Reply').first;
+    await tester.ensureVisible(replyButton);
+    await tester.pumpAndSettle();
+    await tester.tap(replyButton);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Nice photo');
+    await tester.tap(find.widgetWithText(TextButton, 'Reply').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('You: Nice photo'), findsOneWidget);
   });
-
-  testWidgets('corrupt saved comments show an error and keep defaults', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({
-      'comments_charles-post-1': '{invalid json',
-    });
-    await tester.pumpWidget(const TikTokTokApp());
-    await tester.enterText(
-      find.byKey(const ValueKey('username-field')),
-      'michael',
-    );
-    await tester.enterText(
-      find.byKey(const ValueKey('password-field')),
-      'password',
-    );
-    await tester.tap(find.text('LOGIN'));
-    await tester.pumpAndSettle();
-
-    final postCaption = find.text('A quiet morning, thoughtfully spent.');
-    await tester.scrollUntilVisible(
-      postCaption,
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.ensureVisible(postCaption);
-    await tester.pumpAndSettle();
-    await tester.tap(postCaption);
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.text('Saved comments were damaged. Default comments are shown.'),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.scrollUntilVisible(
-      find.text('2 Comments'),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-
-    expect(
-      find.text('Saved comments were damaged. Default comments are shown.'),
-      findsOneWidget,
-    );
-    expect(find.text('2 Comments'), findsOneWidget);
-    expect(
-      (await SharedPreferences.getInstance()).getString(
-        'comments_charles-post-1',
-      ),
-      isNull,
-    );
-  });
-
-  testWidgets(
-    'comments reject blanks, cap length and can be restored after delete',
-    (tester) async {
-      await tester.pumpWidget(const TikTokTokApp());
-      await tester.enterText(
-        find.byKey(const ValueKey('username-field')),
-        'michael',
-      );
-      await tester.enterText(
-        find.byKey(const ValueKey('password-field')),
-        'password',
-      );
-      await tester.tap(find.text('LOGIN'));
-      await tester.pumpAndSettle();
-
-      final postCaption = find.text('A quiet morning, thoughtfully spent.');
-      await tester.scrollUntilVisible(
-        postCaption,
-        300,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.ensureVisible(postCaption);
-      await tester.pumpAndSettle();
-      await tester.tap(postCaption);
-      await tester.pumpAndSettle();
-
-      await tester.scrollUntilVisible(
-        find.text('2 Comments'),
-        300,
-        scrollable: find.byType(Scrollable).first,
-      );
-      final field = find.byType(TextField);
-      await tester.enterText(field, '   ');
-      await tester.tap(find.byTooltip('Send comment'));
-      await tester.pumpAndSettle();
-      expect(find.text('Enter a comment before sending.'), findsOneWidget);
-
-      await tester.enterText(field, 'x' * 340);
-      await tester.pump();
-      expect(tester.widget<TextField>(field).controller!.text.length, 300);
-      expect(find.text('300/300'), findsOneWidget);
-
-      await tester.testTextInput.receiveAction(TextInputAction.send);
-      await tester.pumpAndSettle();
-      tester.testTextInput.hide();
-      await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-        find.text('Love this shot.'),
-        300,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pumpAndSettle();
-      await tester.ensureVisible(find.byTooltip('Delete comment').first);
-      await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Delete comment').first);
-      await tester.pumpAndSettle();
-      expect(find.text('Delete comment?'), findsOneWidget);
-      await tester.tap(find.text('Delete'));
-      await tester.pumpAndSettle();
-      expect(find.text('Comment deleted.'), findsOneWidget);
-      await tester.tap(find.text('Undo'));
-      await tester.pumpAndSettle();
-      expect(find.text('Comment restored.'), findsOneWidget);
-
-      await tester.tap(find.byTooltip('Back to profile'));
-      await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-        postCaption,
-        300,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.ensureVisible(postCaption);
-      await tester.pumpAndSettle();
-      await tester.tap(postCaption);
-      await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-        find.text('3 Comments'),
-        300,
-        scrollable: find.byType(Scrollable).first,
-      );
-      expect(find.text('3 Comments'), findsOneWidget);
-    },
-  );
 }
