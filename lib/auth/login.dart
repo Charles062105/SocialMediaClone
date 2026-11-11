@@ -61,12 +61,12 @@ class _LoginFormState extends State<LoginForm> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.account_circle, size: 100, color: Colors.blue),
+              const Icon(Icons.music_note, size: 100, color: Color.fromARGB(255, 24, 28, 30)),
 
               const SizedBox(height: 20),
 
               const Text(
-                "Welcome Back!",
+                "Tiktoktok!",
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
 
